@@ -3,8 +3,11 @@ import json
 import requests
 import pandas as pd
 from datetime import datetime, timedelta
-from sqlalchemy import create_engine
-from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy import create_engine, exc
+from dotenv import load_dotenv
+
+# Load environment variables from the .env file
+load_dotenv('/app/.env')
 
 # Base URL for the National Weather Service API
 BASE_URL = 'https://api.weather.gov'
@@ -32,8 +35,12 @@ except json.JSONDecodeError:
 # Database URL from environment variable
 DATABASE_URL = os.getenv('DATABASE_URL')
 
+# Check if DATABASE_URL is not None
+if not DATABASE_URL:
+    raise exc.ArgumentError("DATABASE_URL environment variable not set.")
+
 # Replace 'postgres://' with 'postgresql://' for SQLAlchemy compatibility
-if DATABASE_URL and DATABASE_URL.startswith("postgres://"):
+if DATABASE_URL.startswith("postgres://"):
     DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
 
 # Create SQLAlchemy engine
