@@ -1,4 +1,5 @@
 import os
+import json
 import requests
 import pandas as pd
 from datetime import datetime, timedelta
@@ -14,12 +15,19 @@ HEADERS = {
     'Accept': 'application/geo+json'
 }
 
-# Load cities from the environment variable
-CITIES_ENV = os.getenv('CITIES', '')
-CITIES = {}
-for city_info in CITIES_ENV.split(';'):
-    city, gridpoint = city_info.split(':')
-    CITIES[city] = gridpoint
+# Path to the cities JSON file
+CITIES_FILE = '/data/cities.json'
+
+# Load cities from the JSON file
+try:
+    with open(CITIES_FILE, 'r') as file:
+        CITIES = json.load(file)
+except FileNotFoundError:
+    print(f"Error: Cities file not found at {CITIES_FILE}")
+    CITIES = {}
+except json.JSONDecodeError:
+    print(f"Error: Failed to parse the cities JSON file at {CITIES_FILE}")
+    CITIES = {}
 
 # Database URL from environment variable
 DATABASE_URL = os.getenv('DATABASE_URL')
@@ -96,7 +104,6 @@ def fill_missing_data(df, city):
     """
     last_hour_data = fetch_last_hour_data(city)
     if last_hour_data is not None and not last_hour_data.empty:
-        # Avoiding chained assignment by assigning directly
         df['temperature'] = df['temperature'].fillna(last_hour_data['temperature'].mean())
         df['wind_speed'] = df['wind_speed'].fillna(last_hour_data['wind_speed'].mean())
         df['wind_direction'] = df['wind_direction'].fillna(last_hour_data['wind_direction'].mode()[0])
@@ -121,22 +128,25 @@ def store_data(df):
         print(f"Error storing data: {e}")
 
 if __name__ == "__main__":
-    weather_data_list = []
+    if not CITIES:
+        print("No cities to process. Exiting.")
+    else:
+        weather_data_list = []
 
-    for city, gridpoint in CITIES.items():
-        raw_weather_data = fetch_weather_data(gridpoint)
-        if raw_weather_data:
-            processed_data = preprocess_weather_data(raw_weather_data, city)
-            if processed_data:
-                weather_data_list.append(processed_data)
+        for city, gridpoint in CITIES.items():
+            raw_weather_data = fetch_weather_data(gridpoint)
+            if raw_weather_data:
+                processed_data = preprocess_weather_data(raw_weather_data, city)
+                if processed_data:
+                    weather_data_list.append(processed_data)
 
-    if weather_data_list:
-        # Convert list of dictionaries to DataFrame
-        df = pd.DataFrame(weather_data_list)
+        if weather_data_list:
+            # Convert list of dictionaries to DataFrame
+            df = pd.DataFrame(weather_data_list)
 
-        # Fill missing data using last hour's data
-        for city in df['city'].unique():
-            city_df = df[df['city'] == city].copy()
-            city_df = fill_missing_data(city_df, city)
-            store_data(city_df)
-        print("Data stored successfully.")
+            # Fill missing data using last hour's data
+            for city in df['city'].unique():
+                city_df = df[df['city'] == city].copy()
+                city_df = fill_missing_data(city_df, city)
+                store_data(city_df)
+            print("Data stored successfully.")

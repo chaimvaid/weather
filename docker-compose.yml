@@ -16,11 +16,13 @@ services:
   weather_job:
     build: ./weather_job
     container_name: weather_job_container
+    volumes:
+      - ./data:/data
     depends_on:
       - db
     env_file:
       - ./weather_job/.env
-    
+      
   
   server:
     build:
@@ -32,7 +34,6 @@ services:
     volumes:
       - ./server:/usr/app
       - /usr/app/node_modules
-      - ./microkit:/microkit
     ports:
       - 8000:8000
     env_file:
