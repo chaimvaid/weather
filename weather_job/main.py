@@ -86,6 +86,8 @@ def preprocess_weather_data(raw_data, city):
 def fetch_last_hour_data(city):
     """
     Fetches the last hour of data for a specific city from the database.
+     Note:
+    - We are not performing aggregation in SQL to provide the ability to manipulate data using DataFrame (df) operations.
     """
     try:
         last_hour = datetime.utcnow() - timedelta(hours=1)
@@ -108,11 +110,16 @@ def fill_missing_data(df, city):
     """
     Fills missing values in the DataFrame using the mean of the closest available data.
     If data is missing, fetches the mean of the last hour for the specific city.
+    
+    Note:
+    - We drop NaN values before calculating the mean to prevent errors.
+    - In cases where there are a lot of missing values, using the median might be better than the mean.
+    - Another approach could be to use the last valid value (forward-fill) to fill missing data points.
     """
     last_hour_data = fetch_last_hour_data(city)
     if last_hour_data is not None and not last_hour_data.empty:
-        df['temperature'] = df['temperature'].fillna(last_hour_data['temperature'].mean())
-        df['wind_speed'] = df['wind_speed'].fillna(last_hour_data['wind_speed'].mean())
+        df['temperature'] = df['temperature'].fillna(last_hour_data['temperature'].dropna().mean())
+        df['wind_speed'] = df['wind_speed'].fillna(last_hour_data['wind_speed'].dropna().mean())
         df['wind_direction'] = df['wind_direction'].fillna(last_hour_data['wind_direction'].mode()[0])
     else:
         print(f"No data available from the last hour for {city}. Unable to fill missing values.")
