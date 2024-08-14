@@ -65,25 +65,31 @@ const WeatherFilters = () => {
       </div>
       <div className="row mt-3">
         <div className="col-md-6">
-          <label>From Date</label>
+          <label>From Date and Time</label>
           <DatePicker
             selected={localFilters.fromDate}
             onChange={(date) => handleDateChange(date, 'fromDate')}
             className="form-control"
-            dateFormat="yyyy-MM-dd"
+            dateFormat="yyyy-MM-dd h:mm aa"
+            showTimeSelect
+            timeFormat="HH:mm"
+            timeIntervals={15}
             isClearable
-            placeholderText="Select a start date"
+            placeholderText="Select a start date and time"
           />
         </div>
         <div className="col-md-6">
-          <label>To Date</label>
+          <label>To Date and Time</label>
           <DatePicker
             selected={localFilters.toDate}
             onChange={(date) => handleDateChange(date, 'toDate')}
             className="form-control"
-            dateFormat="yyyy-MM-dd"
+            dateFormat="yyyy-MM-dd h:mm aa"
+            showTimeSelect
+            timeFormat="HH:mm"
+            timeIntervals={15}
             isClearable
-            placeholderText="Select an end date"
+            placeholderText="Select an end date and time"
           />
         </div>
       </div>
