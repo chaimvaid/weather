@@ -1,0 +1,9 @@
+.confirm-alert {
+    position: fixed;
+    top: 30px;
+    left: 25%;
+    /* width: 100%; */
+    z-index: 9999;
+    /* border-radius: 0px; */
+    width: 50%;
+}
