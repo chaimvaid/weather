@@ -14,13 +14,12 @@ HEADERS = {
     'Accept': 'application/geo+json'
 }
 
-# Example list of cities with their corresponding gridpoints
-CITIES = {
-    'New York': 'OKX/33,35',
-    'Los Angeles': 'LOX/153,44',
-    'Chicago': 'LOT/45,85',
-    # Add more cities as needed
-}
+# Load cities from the environment variable
+CITIES_ENV = os.getenv('CITIES', '')
+CITIES = {}
+for city_info in CITIES_ENV.split(';'):
+    city, gridpoint = city_info.split(':')
+    CITIES[city] = gridpoint
 
 # Database URL from environment variable
 DATABASE_URL = os.getenv('DATABASE_URL')

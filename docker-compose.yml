@@ -20,8 +20,8 @@ services:
       - ./weather_job:/app
     depends_on:
       - db
-    environment:
-      DATABASE_URL: postgres://weatheruser:weatherpass@db:5432/weatherdb
+    env_file:
+      - ./weather_job/.env
     command: ["python", "main.py"]
   
   server:
@@ -31,8 +31,6 @@ services:
     container_name: server_container
     restart: always
     command: nodemon
-    # entrypoint: /entrypoint.sh
-    # command: tail -f
     volumes:
       - ./server:/usr/app
       - /usr/app/node_modules
@@ -50,7 +48,6 @@ services:
       dockerfile: docker/local.Dockerfile
     container_name: client_container
     restart: always
-    # command: tail -f
     command: npm run start
     volumes:
       - ./client:/usr/app
