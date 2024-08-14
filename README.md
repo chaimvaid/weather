@@ -1,51 +1,117 @@
-# Weather Data Processing Microservices Project
+Here’s a `README.md` file based on the structure and content you’ve provided:
 
-## Project Overview
 
-This project is designed to process, store, and serve weather data using a microservices architecture. The system will consist of three primary components:
+## Services Overview
 
-1. **Python Data Processing Service**: Responsible for fetching, processing, and storing weather data.
-2. **Node.js Backend Service (To be developed)**: Will serve as the API layer, providing RESTful endpoints to access the weather data.
-3. **React Frontend Service (To be developed)**: A user-friendly interface to visualize the weather data.
+1. **Database Service (`db`)**:
+   - A PostgreSQL database service that stores processed weather data.
 
-## Technology Stack
+2. **Weather Data Fetching and Processing Service (`weather_job`)**:
+   - A Python service that fetches weather data from the National Weather Service (NWS) API, processes the data, and stores it in the PostgreSQL database. The service runs as a cron job that executes every minute.
 
-### 1. Python (Data Processing)
-- **Rationale**: Python is chosen for data processing due to its extensive ecosystem of libraries for data manipulation, machine learning, and scientific computing (e.g., Pandas, NumPy, Scikit-learn). These tools make it easy to handle, clean, and analyze large datasets, making Python an ideal choice for the data processing service.
+3. **Backend API Service (`server`)**:
+   - A Node.js/Express service that provides a RESTful API to interact with the weather data stored in the database. It handles requests from the client application and returns the requested data.
 
-### 2. Node.js with Express (Backend Service) - *To be developed*
-- **Rationale**: Node.js with Express will be used to build the backend service. Node.js is known for its non-blocking, event-driven architecture, which is well-suited for building scalable and high-performance APIs. Express, a minimal and flexible Node.js web application framework, will provide a robust set of features for building RESTful services.
+4. **Frontend Service (`client`)**:
+   - A React-based web application that provides a user interface for visualizing the weather data. Users can apply filters, sort data, and paginate through the results.
 
-### 3. React with Bootstrap (Frontend Service) - *To be developed*
-- **Rationale**: React will be used for building the frontend service due to its component-based architecture, which allows for reusable UI components. Bootstrap will be integrated to ensure responsive and modern design out of the box.
-
-## Current Project Status
-
-### Python Data Processing Service
-
-The Python service is currently responsible for:
-
-- **Fetching Weather Data**: Using the National Weather Service API to gather weather data for specified cities.
-- **Processing Data**: Cleaning and filling in missing values using the latest available data.
-- **Storing Data**: Persisting the processed data into a PostgreSQL database.
-
-The service is scheduled to run every minute to keep the weather data up-to-date.
-
-### Backend and Frontend Services
-
-The backend and frontend services are planned but have not yet been implemented. The backend will provide RESTful endpoints for the frontend to consume, and the frontend will provide a visual interface for users to interact with the weather data.
-
-## Getting Started
+## Setup and Running the Project Locally
 
 ### Prerequisites
 
-- Docker and Docker Compose installed on your machine.
-- A valid API key for the National Weather Service API.
+- [Docker](https://www.docker.com/) and [Docker Compose](https://docs.docker.com/compose/) installed on your local machine.
 
-### Setting Up the Python Service
+### Steps to Run the Project
 
 1. **Clone the Repository**:
-
    ```bash
-   git clone https://github.com/yourusername/weather-data-microservices.git
-   cd weather-data-microservices
+   git clone <repository-url>
+   cd <repository-directory>
+   ```
+
+2. **Set Up Environment Variables**:
+   - Ensure that `.env` files are present in the `weather_job`, `server`, and `client` directories with the necessary environment variables. Example `.env` files might include:
+   
+   **Example `.env` for `weather_job`**:
+   ```env
+   DATABASE_URL=postgres://weatheruser:weatherpass@db:5432/weatherdb
+   ```
+
+   **Example `.env` for `server`**:
+   ```env
+   DATABASE_URL=postgres://weatheruser:weatherpass@db:5432/weatherdb
+   ```
+
+   **Example `.env` for `client`**:
+   ```env
+   REACT_APP_API_URL=http://localhost:8000/api
+   ```
+
+3. **Run the Application**:
+   - Start all services using Docker Compose:
+   ```bash
+   docker-compose up --build
+   ```
+
+4. **Access the Application**:
+   - **API**: The backend API will be available at `http://localhost:8000/api`.
+   - **Client**: The frontend web application will be available at `http://localhost:3000`.
+
+## API Documentation
+
+### Base URL
+
+`http://localhost:8000/api`
+
+### Endpoints
+
+#### 1. **Get Weather Data**
+   - **Endpoint**: `/api/weather`
+   - **Method**: `GET`
+   - **Description**: Retrieves all weather data entries from the database.
+
+   **Query Parameters**:
+   - `city` (optional): Filter by city name.
+   - `temperatureMin` (optional): Filter by minimum temperature.
+   - `temperatureMax` (optional): Filter by maximum temperature.
+   - `fromDate` (optional): Filter by start date (in `YYYY-MM-DD` format).
+   - `toDate` (optional): Filter by end date (in `YYYY-MM-DD` format).
+   - `page` (optional): Page number for pagination.
+   - `limit` (optional): Number of records per page.
+
+   **Response**:
+   ```json
+   [
+     {
+       "city": "New York",
+       "temperature": 25.5,
+       "temperature_unit": "Celsius",
+       "wind_speed": 10.5,
+       "wind_direction": "NW",
+       "short_forecast": "Sunny",
+       "detailed_forecast": "Clear skies throughout the day",
+       "date": "2023-08-01T14:00:00Z"
+     },
+     ...
+   ]
+   ```
+
+   **Example Request**:
+   ```bash
+   curl -X GET "http://localhost:8000/api/weather?city=New+York&temperatureMin=20&temperatureMax=30"
+   ```
+
+## Project Structure
+
+- **weather_job**: Contains the Python code for fetching and processing weather data.
+- **server**: Contains the Node.js/Express backend API code.
+- **client**: Contains the React frontend code.
+- **data**: Directory for storing data files like `cities.json`.
+- **docker-compose.yml**: Docker Compose configuration for orchestrating all services.
+
+## Notes
+
+- Ensure that the `cities.json` file is properly configured in the `/data` directory.
+- The weather data fetching service runs every minute as per the cron job configuration.
+- This project allows flexible data manipulation using Pandas DataFrames before storing data in the PostgreSQL database.
+
