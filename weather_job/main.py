@@ -5,6 +5,7 @@ import pandas as pd
 from datetime import datetime, timedelta
 from sqlalchemy import create_engine, exc
 from dotenv import load_dotenv
+import time
 
 # Load environment variables from the .env file
 load_dotenv('/app/.env')
@@ -46,18 +47,30 @@ if DATABASE_URL.startswith("postgres://"):
 # Create SQLAlchemy engine
 engine = create_engine(DATABASE_URL)
 
-def fetch_weather_data(gridpoint):
+def fetch_weather_data(gridpoint, retries=3, backoff_factor=0.3):
     """
     Fetches weather data from the National Weather Service API for a given gridpoint.
+    Implements retry logic with exponential backoff to handle rate limits.
     """
-    try:
-        url = f'{BASE_URL}/gridpoints/{gridpoint}/forecast'
-        response = requests.get(url, headers=HEADERS)
-        response.raise_for_status()  # Raise an error for bad status codes
-        return response.json()
-    except requests.exceptions.RequestException as e:
-        print(f"Error fetching data for gridpoint {gridpoint}: {e}")
-        return None
+    url = f'{BASE_URL}/gridpoints/{gridpoint}/forecast'
+    
+    for attempt in range(retries):
+        try:
+            response = requests.get(url, headers=HEADERS)
+            response.raise_for_status()  # Raise an error for bad status codes
+            return response.json()
+        except requests.exceptions.HTTPError as e:
+            if response.status_code == 429:  # Rate limit error
+                backoff_time = backoff_factor * (2 ** attempt)
+                print(f"Rate limit hit, retrying in {backoff_time} seconds...")
+                time.sleep(backoff_time)
+            else:
+                print(f"HTTP error fetching data for gridpoint {gridpoint}: {e}")
+                break
+        except requests.exceptions.RequestException as e:
+            print(f"Error fetching data for gridpoint {gridpoint}: {e}")
+            break
+    return None
 
 def preprocess_weather_data(raw_data, city):
     """
@@ -66,6 +79,11 @@ def preprocess_weather_data(raw_data, city):
     try:
         periods = raw_data['properties']['periods']
         first_period = periods[0]
+        
+        # Ensure data validity
+        if first_period.get('temperature') is None or first_period.get('windSpeed') is None:
+            print(f"Invalid data received for city {city}. Skipping...")
+            return None
         
         processed_data = {
             'city': city,
@@ -86,7 +104,7 @@ def preprocess_weather_data(raw_data, city):
 def fetch_last_hour_data(city):
     """
     Fetches the last hour of data for a specific city from the database.
-     Note:
+    Note:
     - We are not performing aggregation in SQL to provide the ability to manipulate data using DataFrame (df) operations.
     """
     try:
