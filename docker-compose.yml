@@ -17,7 +17,7 @@ services:
     build: ./weather_job
     container_name: weather_job_container
     volumes:
-      - ./data:/data
+      - ./weather_job/data:/data
     depends_on:
       - db
     env_file:
