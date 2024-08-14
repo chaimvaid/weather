@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { setFilters, getWeatherFilters, getWeatherDataAsync } from '../../features/redux/weatherSlice';
+import { setMsgAsync, Message } from '../../features/redux/notificationsSlice';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 
@@ -8,6 +9,7 @@ const WeatherFilters = () => {
   const dispatch = useDispatch();
   const filters = useSelector(getWeatherFilters);
   const [localFilters, setLocalFilters] = useState(filters);
+  const [applyDisabled, setApplyDisabled] = useState(false);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -24,9 +26,25 @@ const WeatherFilters = () => {
     });
   };
 
+  useEffect(() => {
+    // Check if both dates are selected and start date is greater than end date
+    if (localFilters.fromDate && localFilters.toDate) {
+      if (localFilters.fromDate > localFilters.toDate) {
+        setApplyDisabled(true);
+        dispatch(setMsgAsync(new Message("End time should be greater than start time.").getAction()));
+      } else {
+        setApplyDisabled(false);
+      }
+    } else {
+      setApplyDisabled(false);
+    }
+  }, [localFilters.fromDate, localFilters.toDate, dispatch]);
+
   const applyFilters = () => {
-    dispatch(setFilters(localFilters));
-    dispatch(getWeatherDataAsync(localFilters));
+    if (!applyDisabled) {
+      dispatch(setFilters(localFilters));
+      dispatch(getWeatherDataAsync(localFilters));
+    }
   };
 
   return (
@@ -93,7 +111,7 @@ const WeatherFilters = () => {
           />
         </div>
       </div>
-      <button className="btn btn-primary mt-3" onClick={applyFilters}>
+      <button className="btn btn-primary mt-3" onClick={applyFilters} disabled={applyDisabled}>
         Apply Filters
       </button>
     </div>
