@@ -25,8 +25,8 @@ Here’s a `README.md` file based on the structure and content you’ve provided
 
 1. **Clone the Repository**:
    ```bash
-   git clone <repository-url>
-   cd <repository-directory>
+   git clone https://github.com/chaimvaid/weather
+   cd weather
    ```
 
 2. **Set Up Environment Variables**:
