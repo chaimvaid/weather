@@ -15,14 +15,12 @@ services:
 
   weather_job:
     build: ./weather_job
-    container_name: weather_job
-    volumes:
-      - ./weather_job:/app
+    container_name: weather_job_container
     depends_on:
       - db
     env_file:
       - ./weather_job/.env
-    command: ["python", "main.py"]
+    
   
   server:
     build:
